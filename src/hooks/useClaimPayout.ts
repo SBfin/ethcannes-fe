@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getErrorMessage } from '../../utils/errorHandling';
+import { getErrorMessage } from '../utils/errorHandling';
 
 interface UseClaimPayoutReturn {
   claimPayout: (gameId: number) => Promise<void>;
