@@ -4,6 +4,22 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+:root {
+  /* Deal with me Color Palette - More "Gambling" Style */
+  --primary-color: #9d4edd; /* A vibrant purple */
+  --secondary-color: #ffc300; /* A rich gold */
+  --sakura-pink: #E6A4B4;
+  --lush-purple: #4C2A85;
+  --goldenrod: #D4AF37;
+  --midnight-blue: #0B022D;
+  --creamy-white: #F5F5F5;
+
+  /* Gradients */
+  --sakura-gradient: linear-gradient(180deg, var(--sakura-pink) 0%, var(--lush-purple) 100%);
 }
 
 a {
@@ -13,4 +29,45 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+/* Hide RainbowKit network switcher and chain indicators */
+[data-testid="rk-chain-button"],
+[data-testid="chain-button"],
+.iekbcc0._1vwt0cg2._1vwt0cg1.ju367v9f.ju367va.ju367vb.ju367vd {
+  display: none !important;
+}
+
+/* Hide network icons in RainbowKit modals */
+[data-testid="rk-network-button"],
+button[aria-label*="Switch to"],
+button[aria-label*="network"] {
+  display: none !important;
+}
+
+/* Custom styling for our connect button */
+.custom-connect-button {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  padding: 12px 20px;
+}
+
+.custom-connect-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Header controls layout */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0; /* No gap, margin handled by settings button */
 }

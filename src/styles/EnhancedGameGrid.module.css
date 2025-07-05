@@ -1,0 +1,266 @@
+/* Enhanced Game Grid Container */
+.gameGridContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Main Game Grid */
+.gameGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-template-rows: repeat(3, 100px);
+  gap: 16px;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  position: relative;
+}
+
+/* Individual Game Cell */
+.gameCell {
+  width: 100px;
+  height: 100px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* Cell Number */
+.cellNumber {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 18px;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+/* Cell Content */
+.cellContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Unrevealed Cell Symbol */
+.unrevealedSymbol {
+  font-size: 2.5rem;
+  color: rgba(0, 0, 0, 0.2);
+  font-weight: 300;
+  user-select: none;
+  transition: all 0.3s ease;
+}
+
+/* Hover Effects */
+.gameCell:not(.revealed):not(.disabled):hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 12px 24px rgba(0, 0, 0, 0.12),
+    0 4px 8px rgba(0, 0, 0, 0.08);
+  border-color: rgba(138, 43, 226, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+}
+
+.gameCell:not(.revealed):not(.disabled):hover .unrevealedSymbol {
+  color: rgba(138, 43, 226, 0.4);
+  transform: scale(1.1);
+}
+
+.gameCell:not(.revealed):not(.disabled):hover .cellNumber {
+  background: rgba(138, 43, 226, 0.2);
+  color: rgba(138, 43, 226, 0.8);
+  transform: scale(1.1);
+}
+
+/* Selected State */
+.gameCell.selected {
+  background: linear-gradient(135deg, #8a2be2 0%, #9370db 100%);
+  border-color: #6a1b9a;
+  transform: translateY(-6px) scale(1.05);
+  box-shadow: 
+    0 0 0 3px rgba(138, 43, 226, 0.3),
+    0 16px 32px rgba(138, 43, 226, 0.25),
+    0 8px 16px rgba(0, 0, 0, 0.1);
+  animation: selectedPulse 2s ease-in-out infinite;
+}
+
+.gameCell.selected .unrevealedSymbol {
+  color: white;
+  transform: scale(1.1);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.gameCell.selected .cellNumber {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+}
+
+/* Selection Ring Animation */
+.selectionRing {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  border: 3px solid transparent;
+  border-radius: 20px;
+  background: linear-gradient(45deg, #8a2be2, #9370db, #8a2be2) border-box;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: ringRotate 3s linear infinite;
+  z-index: 0;
+}
+
+/* Revealed State */
+.gameCell.revealed {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-color: rgba(0, 0, 0, 0.1);
+  cursor: default;
+}
+
+.gameCell.revealed:hover {
+  transform: none;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* Disabled State */
+.gameCell.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gameCell.disabled:hover {
+  transform: none;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* Game Stats */
+.gameStats {
+  width: 100%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 4px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.statsContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.statItem {
+  text-align: center;
+}
+
+.statLabel {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2d5a3d;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes selectedPulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 3px rgba(138, 43, 226, 0.3),
+      0 16px 32px rgba(138, 43, 226, 0.25),
+      0 8px 16px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 6px rgba(138, 43, 226, 0.2),
+      0 20px 40px rgba(138, 43, 226, 0.3),
+      0 12px 24px rgba(0, 0, 0, 0.15);
+  }
+}
+
+@keyframes ringRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .gameGrid {
+    grid-template-columns: repeat(3, 80px);
+    grid-template-rows: repeat(3, 80px);
+    gap: 12px;
+    padding: 24px;
+  }
+  
+  .gameCell {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .unrevealedSymbol {
+    font-size: 2rem;
+  }
+  
+  .cellNumber {
+    width: 16px;
+    height: 16px;
+    font-size: 9px;
+    top: 4px;
+    left: 4px;
+  }
+} 
