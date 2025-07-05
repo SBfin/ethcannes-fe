@@ -1,20 +1,21 @@
 import React from 'react';
 import { useSimpleGameWatcher } from '../hooks/turn-based-scratcher/useSimpleGameWatcher';
-import { formatUnits } from 'viem';
+import { formatUSDC } from '../utils/formatting';
+import { Badge } from './Badge';
 
 interface GameStatusProps {
   gameId: number | null;
 }
 
-export const GameStatus: React.FC<GameStatusProps> = ({ gameId }) => {
+const GameStatus: React.FC<GameStatusProps> = ({ gameId }) => {
   const {
     gameData,
     gameState,
-    currentRound,
     isAwaitingVRF,
     isInNegotiation,
     isFinished,
     lastUpdate,
+    currentRound,
   } = useSimpleGameWatcher(gameId);
 
   if (!gameId) {
@@ -29,18 +30,42 @@ export const GameStatus: React.FC<GameStatusProps> = ({ gameId }) => {
     );
   }
 
-  const formatUSDC = (amount: bigint) => {
-    return parseFloat(formatUnits(amount, 6)).toFixed(2);
-  };
+  const renderPayouts = () => (
+    <div className="payouts-grid">
+      {gameData.revealedPayouts.map((payout: bigint, index: number) => (
+        <div key={index} className={`round-payout ${payout > 0 ? 'revealed' : 'pending'}`}>
+          <span className="round-label">Round {index + 1}:</span>
+          <span className="payout-amount">
+            {payout > 0 ? `${formatUSDC(payout)} USDC` : 'Pending...'}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+
+  const renderOffers = () => (
+    gameData.offeredPayouts && gameData.offeredPayouts.some((offer: bigint) => offer > 0) && (
+      <div className="offers">
+        <h4>House Offers:</h4>
+        {gameData.offeredPayouts.map((offer: bigint, index: number) => 
+          offer > 0 ? (
+            <div key={index} className="offer">
+              Round {index + 1}: {formatUSDC(offer)} USDC
+            </div>
+          ) : null
+        )}
+      </div>
+    )
+  );
 
   return (
     <div className="game-status">
       <div className="game-header">
         <h3>Game #{gameId}</h3>
         <div className="game-state">
-          <span className={`state-badge ${isAwaitingVRF ? 'awaiting' : isInNegotiation ? 'negotiation' : isFinished ? 'finished' : ''}`}>
+          <Badge className={`${isAwaitingVRF ? 'awaiting' : isInNegotiation ? 'negotiation' : isFinished ? 'finished' : ''}`}>
             {gameState}
-          </span>
+          </Badge>
         </div>
       </div>
 
@@ -54,33 +79,11 @@ export const GameStatus: React.FC<GameStatusProps> = ({ gameId }) => {
         </div>
       )}
 
-      {gameData && gameData.revealedPayouts && (
+      {gameData && (
         <div className="game-details">
           <h4>Game Progress:</h4>
-          <div className="payouts-grid">
-            {gameData.revealedPayouts.map((payout: bigint, index: number) => (
-              <div key={index} className={`round-payout ${payout > 0 ? 'revealed' : 'pending'}`}>
-                <span className="round-label">Round {index + 1}:</span>
-                <span className="payout-amount">
-                  {payout > 0 ? `${formatUSDC(payout)} USDC` : 'Pending...'}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {gameData.offeredPayouts && gameData.offeredPayouts.some((offer: bigint) => offer > 0) && (
-            <div className="offers">
-              <h4>House Offers:</h4>
-              {gameData.offeredPayouts.map((offer: bigint, index: number) => 
-                offer > 0 ? (
-                  <div key={index} className="offer">
-                    Round {index + 1}: {formatUSDC(offer)} USDC
-                  </div>
-                ) : null
-              )}
-            </div>
-          )}
-
+          {renderPayouts()}
+          {renderOffers()}
           {gameData.holeFound && (
             <div className="hole-found-notice">
               <p>💥 Hole found! Game ended early.</p>
@@ -119,15 +122,6 @@ export const GameStatus: React.FC<GameStatusProps> = ({ gameId }) => {
           margin: 0;
           color: #1e293b;
           font-size: 18px;
-        }
-
-        .state-badge {
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 12px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
         }
 
         .state-badge.awaiting {
@@ -242,35 +236,29 @@ export const GameStatus: React.FC<GameStatusProps> = ({ gameId }) => {
           text-align: center;
         }
 
-        .hole-found-notice::before {
-          content: '💥';
-          margin-right: 8px;
-          font-size: 20px;
-        }
-
         .hole-found-notice p {
           margin: 0;
-          color: #dc2626;
-          font-weight: 600;
+          font-weight: bold;
+          color: #991b1b;
         }
 
         .game-finished {
-          background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-          border: 1px solid #a7f3d0;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
           border-radius: 8px;
           padding: 16px;
+          margin-top: 16px;
           text-align: center;
         }
 
         .game-finished h4 {
-          margin: 0 0 12px 0;
-          color: #065f46;
+          margin: 0 0 8px 0;
+          color: #14532d;
         }
 
-        .loading {
-          text-align: center;
-          padding: 20px;
-          color: #64748b;
+        .game-finished p {
+          margin: 0;
+          color: #166534;
         }
 
         @keyframes spin {
@@ -278,29 +266,9 @@ export const GameStatus: React.FC<GameStatusProps> = ({ gameId }) => {
             transform: rotate(360deg);
           }
         }
-
-        @media (max-width: 640px) {
-          .game-status {
-            padding: 16px;
-            margin: 12px 0;
-          }
-
-          .game-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-          }
-
-          .payouts-grid {
-            gap: 6px;
-          }
-
-          .round-payout {
-            padding: 6px 10px;
-            font-size: 13px;
-          }
-        }
       `}</style>
     </div>
   );
-}; 
+};
+
+export const MemoizedGameStatus = React.memo(GameStatus); 
