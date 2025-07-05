@@ -6,16 +6,19 @@ import {
   GAME_CONFIG,
   getUSDCAddress,
   isNetworkSupported,
-} from '../../contracts/config';
-import { useApproval } from '../useApproval';
-import { decodeEventLog, createPublicClient, http, SimulateContractReturnType, Hash, ContractFunctionArgs } from 'viem';
+} from '../contracts/config';
+import { useApproval } from './useApproval';
+import { decodeEventLog, createPublicClient, http, Hash } from 'viem';
 import { ronin } from 'viem/chains';
-import { ERC20_ABI } from '../../contracts/erc20.abi';
-import { getErrorMessage } from '../../utils/errorHandling';
+import { ERC20_ABI } from '../contracts/erc20.abi';
+import { getErrorMessage } from '../utils/errorHandling';
 
 interface GameStartedEvent {
   eventName: string;
-  args: [bigint, string]; // [gameId, player]
+  args: {
+    gameId: bigint;
+    player: `0x${string}`;
+  };
 }
 
 interface SimulationResult {
@@ -35,7 +38,6 @@ export const useStartGame = () => {
   const { address, chainId } = useAccount();
   const [gameId, setGameId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [startGameTxHash, setStartGameTxHash] = useState<Hash | undefined>();
 
   const contractAddress = chainId ? getTurnBasedContractAddress(chainId) : undefined;
   const usdcAddress = getUSDCAddress(chainId || 2020);
@@ -51,26 +53,6 @@ export const useStartGame = () => {
     },
   }) as { data: bigint | undefined; isLoading: boolean; error: Error | null };
 
-  // Add debug logging for gameFee
-  useEffect(() => {
-    if (gameFee !== undefined) {
-      console.log('📖 [useStartGame] gameFee success:', {
-        contractAddress,
-        chainId,
-        gameFee: gameFee.toString(),
-        timestamp: new Date().toISOString()
-      });
-    }
-    if (gameFeeError) {
-      console.error('❌ [useStartGame] gameFee error:', {
-        contractAddress,
-        chainId,
-        error: gameFeeError,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [gameFee, gameFeeError, contractAddress, chainId]);
-
   // Get VRF fee estimate
   const { data: vrfFee, isLoading: isVrfFeeLoading, error: vrfFeeError } = useReadContract({
     address: contractAddress,
@@ -81,107 +63,14 @@ export const useStartGame = () => {
     },
   }) as { data: bigint | undefined; isLoading: boolean; error: Error | null };
 
-  // Add debug logging for VRF fee
-  useEffect(() => {
-    if (vrfFee !== undefined) {
-      console.log('📖 [useStartGame] estimateVRFFee success:', {
-        contractAddress,
-        chainId,
-        vrfFee: vrfFee.toString(),
-        timestamp: new Date().toISOString()
-      });
-    }
-    if (vrfFeeError) {
-      console.error('❌ [useStartGame] estimateVRFFee error:', {
-        contractAddress,
-        chainId,
-        error: vrfFeeError,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [vrfFee, vrfFeeError, contractAddress, chainId]);
-
-  // Read the contract's USDC address to verify it matches our approval
-  const { data: contractUsdcAddress } = useReadContract({
-    address: contractAddress,
-    abi: TURN_BASED_SCRATCHER_ABI,
-    functionName: 'usdc',
-    query: {
-      enabled: !!contractAddress,
-    },
-  }) as { data: `0x${string}` | undefined };
-
-  // Add debug logging for USDC address
-  useEffect(() => {
-    if (contractUsdcAddress !== undefined) {
-      console.log('📖 [useStartGame] usdc address success:', {
-        contractAddress,
-        chainId,
-        contractUsdcAddress,
-        expectedUsdcAddress: usdcAddress,
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [contractUsdcAddress, contractAddress, chainId, usdcAddress]);
-
-  // Check contract's USDC balance
-  const { data: contractUsdcBalance } = useReadContract({
-    address: usdcAddress as `0x${string}`,
-    abi: ERC20_ABI,
-    functionName: 'balanceOf',
-    args: contractAddress ? [contractAddress] : undefined,
-    query: {
-      enabled: !!contractAddress,
-    },
-  }) as { data: bigint | undefined };
-
-  // Add debug logging for USDC balance
-  useEffect(() => {
-    if (contractUsdcBalance !== undefined) {
-      console.log('📖 [useStartGame] contract USDC balance success:', {
-        contractAddress,
-        chainId,
-        usdcAddress,
-        balance: contractUsdcBalance.toString(),
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [contractUsdcBalance, contractAddress, chainId, usdcAddress]);
-
-  // Direct allowance check for debugging
-  const { data: directAllowance, refetch: refetchDirectAllowance } = useReadContract({
-    address: usdcAddress as `0x${string}`,
-    abi: ERC20_ABI,
-    functionName: 'allowance',
-    args: address && contractAddress ? [address, contractAddress] : undefined,
-    query: {
-      enabled: !!address && !!contractAddress,
-    },
-  }) as { data: bigint | undefined; refetch: () => void };
-
-  // Add debug logging for allowance
-  useEffect(() => {
-    if (directAllowance !== undefined) {
-      console.log('📖 [useStartGame] USDC allowance success:', {
-        contractAddress,
-        chainId,
-        usdcAddress,
-        owner: address,
-        allowance: directAllowance.toString(),
-        timestamp: new Date().toISOString()
-      });
-    }
-  }, [directAllowance, contractAddress, chainId, usdcAddress, address]);
-
   const approval = useApproval({
-    amount: gameFee ? (Number(gameFee) / 10**GAME_CONFIG.DECIMALS).toFixed(2) : '1.00', // Default to 1 USDC instead of '0'
+    amount: gameFee ? (Number(gameFee) / 10**GAME_CONFIG.DECIMALS).toFixed(2) : '1.00',
     spenderOverride: contractAddress,
-    chainId: chainId,
   });
 
   const {
     writeContract,
-    data: writeHash,
+    data: startGameTxHash,
     isPending: isStartingGame,
     error: startGameError,
     reset: resetStartGame,
@@ -318,149 +207,89 @@ export const useStartGame = () => {
   }, [address, chainId, contractAddress, gameFee, isGameFeeLoading, gameFeeError, vrfFee, isVrfFeeLoading, vrfFeeError, usdcAddress]);
 
   const startGame = useCallback(async (cellIndexes: number[]) => {
-    console.log('🎮 [useStartGame] Starting new game:', {
-      cellIndexes,
-      address,
-      chainId,
-      contractAddress,
-      timestamp: new Date().toISOString()
-    });
-
     // Reset any previous transaction state first
     setError(null);
-    setStartGameTxHash(undefined);
-    if (resetStartGame) resetStartGame();
-    
-    // Small delay to ensure state is reset
-    await new Promise(resolve => setTimeout(resolve, 100));
+    resetStartGame();
     
     if (!address || !chainId) {
-      console.warn('⚠️ [useStartGame] No wallet connected');
       setError('Please connect your wallet.');
       return;
     }
     
     if (!contractAddress) {
-      console.warn('⚠️ [useStartGame] Contract not deployed');
       setError('The contract is not deployed on this network.');
       return;
     }
     
     if (cellIndexes.length !== 3) {
-      console.warn('⚠️ [useStartGame] Invalid cell count:', cellIndexes.length);
       setError('Please select exactly 3 cells.');
       return;
     }
     
     if (!approval.isApproved) {
-      console.warn('⚠️ [useStartGame] Game fee not approved');
       setError('Please approve the game fee before starting.');
       return;
     }
 
     try {
       // Simulate the transaction first
-      console.log('🔄 [useStartGame] Simulating transaction...');
       const simulation = await simulateTransaction(cellIndexes);
       
       if (!simulation?.success || !simulation?.request) {
-        console.error('❌ [useStartGame] Simulation failed:', simulation?.error);
         setError(simulation?.error || 'Simulation failed without error message');
         return;
       }
 
       // Write the contract with proper typing
-      console.log('📝 [useStartGame] Sending transaction via writeContract...');
       writeContract(simulation.request);
 
     } catch (error: any) {
-      console.error('❌ [useStartGame] Transaction error:', error);
       setError(error.message || 'Failed to start game');
     }
   }, [address, chainId, contractAddress, approval.isApproved, simulateTransaction, writeContract, resetStartGame]);
 
   // Extract game ID from transaction receipt
   useEffect(() => {
-    console.log('🧾 [useStartGame] Transaction status:', {
-      txHash: startGameTxHash,
-      isConfirming,
-      isConfirmed,
-      hasReceipt: !!receipt,
-      timestamp: new Date().toISOString()
-    });
-
     if (receipt && isConfirmed) {
-      try {
-        // Look for the GameStarted event
-        const gameStartedLog = receipt.logs?.find(log => {
-          try {
-            const decoded = decodeEventLog({
-              abi: TURN_BASED_SCRATCHER_ABI,
-              data: log.data,
-              topics: log.topics,
-            });
-            return decoded.eventName === 'GameStarted';
-          } catch {
-            return false;
-          }
-        });
-
-        if (gameStartedLog) {
-          const decoded = decodeEventLog({
+      let gameStartedEventFound = false;
+      for (const log of receipt.logs) {
+        try {
+          const decodedEvent = decodeEventLog({
             abi: TURN_BASED_SCRATCHER_ABI,
-            data: gameStartedLog.data,
-            topics: gameStartedLog.topics,
-          }) as GameStartedEvent;
-          
-          if (decoded.eventName === 'GameStarted' && decoded.args) {
-            // viem returns args as an object (named params + numeric keys). Prefer named keys.
-            const argsObj = decoded.args as Record<string, any>;
-            const rawGameId = argsObj.gameId ?? argsObj[0];
-            const rawPlayer = argsObj.player ?? argsObj[1];
+            data: log.data,
+            topics: log.topics,
+          });
 
-            if (rawGameId !== undefined) {
-              const parsedGameId = Number(rawGameId);
-              console.log('🎲 [useStartGame] Game started:', {
-                gameId: parsedGameId,
-                player: rawPlayer,
-                txHash: startGameTxHash,
-                timestamp: new Date().toISOString()
-              });
-              setGameId(parsedGameId);
-            } else {
-              console.error('❌ [useStartGame] Could not parse gameId from event args:', decoded.args);
+          if (decodedEvent.eventName === 'GameStarted') {
+            const gameStartedEvent = decodedEvent as unknown as GameStartedEvent;
+            const gameIdArg = gameStartedEvent.args?.gameId;
+
+            if (gameIdArg !== undefined) {
+              setGameId(Number(gameIdArg));
+              gameStartedEventFound = true;
+              break; 
             }
-          } else {
-            console.warn('⚠️ [useStartGame] No GameStarted event found in receipt');
           }
-        } else {
-          console.warn('⚠️ [useStartGame] No GameStarted event found in receipt');
+        } catch {
+          // Ignore logs that don't match the ABI
         }
-      } catch (error) {
-        console.error('❌ [useStartGame] Error parsing receipt:', error);
+      }
+
+      if (!gameStartedEventFound) {
+        setError('GameStarted event not found in transaction receipt.');
       }
     }
-  }, [receipt, isConfirmed, startGameTxHash, isConfirming]);
+  }, [receipt, isConfirmed]);
 
   // Handle errors
   useEffect(() => {
     if (startGameError) {
-      console.error('❌ [useStartGame] Start game error:', startGameError);
       setError(startGameError.message || 'Unknown error occurred');
     }
     if (confirmationError) {
-      console.error('❌ [useStartGame] Confirmation error:', confirmationError);
       setError(confirmationError.message || 'Unknown error occurred');
     }
   }, [startGameError, confirmationError]);
-
-  // Update startGameTxHash when we get it from writeContract
-  useEffect(() => {
-    if (writeHash) {
-      console.log('📥 [useStartGame] Received tx hash from writeContract:', writeHash);
-      setStartGameTxHash(writeHash as Hash);
-    }
-  }, [writeHash]);
 
   return {
     startGame,
