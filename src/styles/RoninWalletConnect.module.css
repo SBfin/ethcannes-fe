@@ -1,0 +1,238 @@
+/* Ronin Wallet Connect Component Styles */
+
+.container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .connectButton {
+    background-color: var(--accent-primary);
+    color: var(--background-dark);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .connectButton:hover {
+    background-color: var(--accent-secondary);
+  }
+  
+  .connectButton:disabled {
+    background-color: #4a5568;
+    cursor: not-allowed;
+  }
+  
+  .connectedInfo {
+    display: flex;
+    align-items: center;
+    background-color: transparent;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+  
+  .addressText {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-right: 0.75rem;
+  }
+  
+  .disconnectButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .disconnectButton img {
+    width: 16px;
+    height: 16px;
+    filter: grayscale(1) brightness(1.5);
+    transition: filter 0.2s ease;
+  }
+  
+  .disconnectButton:hover img {
+    filter: none;
+  }
+  
+  .connectingContainer {
+    padding: 1.5rem;
+    background: rgba(59, 130, 246, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    text-align: center;
+    min-width: 300px;
+  }
+  
+  .qrCodeContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .qrCodeTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgb(59, 130, 246);
+  }
+  
+  .qrCodeDescription {
+    font-size: 0.875rem;
+    color: rgba(59, 130, 246, 0.8);
+  }
+  
+  .mobileLink {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: rgb(59, 130, 246);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .mobileLink:hover {
+    background: rgb(37, 99, 235);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+  
+  .loadingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    border-top: 2px solid rgb(59, 130, 246);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .loadingText {
+    font-size: 0.875rem;
+    color: rgb(59, 130, 246);
+    font-weight: 500;
+  }
+  
+  .cancelButton {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(107, 114, 128, 0.8);
+    border: 1px solid rgba(107, 114, 128, 0.4);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .cancelButton:hover {
+    background: rgba(107, 114, 128, 1);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+  }
+  
+  .disconnectContainer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(34, 197, 94, 0.1);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    min-width: 200px;
+  }
+  
+  .disconnectInfo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .disconnectText {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgb(34, 197, 94);
+  }
+  
+  .disconnectAddress {
+    font-size: 0.75rem;
+    font-family: 'Courier New', monospace;
+    color: rgba(34, 197, 94, 0.8);
+    word-break: break-all;
+  }
+  
+  /* Desktop styles */
+  @media (min-width: 769px) {
+    .connectButton {
+      font-size: 0.75rem;
+      padding: 0.4rem 0.8rem;
+      width: auto;
+    }
+    
+    .connectedContainer {
+      min-width: 180px;
+    }
+    
+    .connectingContainer {
+      min-width: 250px;
+    }
+  }
+  
+  /* Mobile styles */
+  @media (max-width: 768px) {
+    .container {
+      min-width: auto;
+    }
+    
+    .connectButton {
+      min-width: 120px;
+      font-size: 0.8rem;
+      padding: 0.6rem 1rem;
+    }
+    
+    .connectedContainer {
+      min-width: 160px;
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .connectingContainer {
+      min-width: 200px;
+      padding: 1rem;
+    }
+    
+    .qrCodeContainer {
+      gap: 0.75rem;
+    }
+    
+    .qrCodeTitle {
+      font-size: 0.875rem;
+    }
+    
+    .qrCodeDescription {
+      font-size: 0.75rem;
+    }
+  } 
