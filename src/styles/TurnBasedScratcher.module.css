@@ -1,0 +1,258 @@
+.scratcherContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  padding: 0;
+  background: transparent;
+  width: 100%;
+  max-width: 700px;
+  margin: auto;
+  min-height: fit-content;
+}
+
+.title {
+  color: var(--creamy-white);
+  font-size: 1.8rem;
+  font-weight: 600;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  width: 100%;
+  max-width: 450px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.cell {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-height: 120px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.cell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.cell:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05) translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.cell.selected {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.4) 0%, rgba(75, 0, 130, 0.3) 100%);
+  border-color: #a77dff;
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 0 20px rgba(167, 125, 255, 0.5), 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.cellSymbol {
+  font-size: 3rem;
+  color: var(--creamy-white);
+  user-select: none;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.playButton {
+  padding: 16px 32px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #8a2be2 0%, #4b0082 100%);
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 4px 16px rgba(138, 43, 226, 0.3);
+}
+
+.playButton:disabled {
+  background: rgba(85, 85, 85, 0.5);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.playButton:not(:disabled):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(138, 43, 226, 0.4);
+}
+
+.buttonContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.buttonRow .playButton,
+.buttonRow .dealButton {
+  flex: 1;
+  max-width: none;
+}
+
+/* Ensure buttons stay side-by-side on mobile */
+@media (max-width: 768px) {
+  .buttonRow {
+    flex-direction: row;
+    gap: 4px; /* Reduced gap between side-by-side buttons */
+  }
+  
+  .buttonRow .playButton,
+  .buttonRow .dealButton {
+    flex: 1;
+    max-width: none;
+    min-width: 0;
+  }
+}
+
+.dealButton {
+  padding: 16px 24px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);
+}
+
+.dealButton:disabled {
+  background: rgba(85, 85, 85, 0.5);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.dealButton:not(:disabled):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(40, 167, 69, 0.4);
+}
+
+.testButton {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.3);
+  margin-top: 10px;
+}
+
+.testButton:disabled {
+  background: rgba(85, 85, 85, 0.5);
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.testButton:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.errorText {
+  color: #ff4d4d;
+  font-size: 1rem;
+  min-height: 1.2rem;
+}
+
+/* Mobile responsive optimizations */
+@media (max-width: 768px) {
+  .scratcherContainer {
+    gap: 5px; /* Further reduced to minimize space between title and header */
+    padding: 0;
+  }
+
+  .title {
+    font-size: 1.2rem; /* Further reduced from 1.4rem */
+    margin: 0;
+    text-align: center;
+  }
+
+  .grid {
+    max-width: 240px; /* Further reduced from 280px */
+    padding: 12px; /* Further reduced from 16px */
+    gap: 8px; /* Further reduced from 12px */
+    border-radius: 12px; /* Reduced from 16px */
+    /* Make grid background more subtle on mobile */
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .cell {
+    min-height: 60px; /* Further reduced from 80px */
+    border-radius: 8px; /* Further reduced from 12px */
+    /* Reduce cell styling for compactness */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .cellSymbol {
+    font-size: 1.5rem; /* Further reduced from 2rem */
+  }
+
+  .buttonContainer {
+    max-width: 240px; /* Match grid width */
+    gap: 4px; /* Further reduced to save space */
+  }
+
+  .playButton,
+  .dealButton {
+    padding: 8px 12px; /* Reduced height for mobile to prevent overflow */
+    font-size: 0.85rem; /* Slightly smaller font */
+    border-radius: 8px; /* Smaller border radius */
+    min-height: 36px; /* Set minimum height to keep consistent */
+    line-height: 1.2; /* Tighter line height */
+  }
+} 
