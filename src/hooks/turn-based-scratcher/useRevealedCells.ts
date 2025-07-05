@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
 import {
   TURN_BASED_SCRATCHER_ABI,
@@ -11,119 +11,112 @@ export interface RevealedCellData {
   payout: number;
 }
 
+interface GameData {
+  state: number;
+  // Other properties of the game data can be added here
+}
+
+const useRoundResults = (
+  gameId: number | null,
+  roundNumber: number,
+  isEnabled: boolean,
+) => {
+  const { chainId } = useAccount();
+  const contractAddress = chainId
+    ? getTurnBasedContractAddress(chainId)
+    : undefined;
+
+  return useReadContract({
+    address: contractAddress,
+    abi: TURN_BASED_SCRATCHER_ABI,
+    functionName: 'getRoundCellResults',
+    args: gameId ? [BigInt(gameId), roundNumber] : undefined,
+    query: {
+      enabled: isEnabled,
+      refetchInterval: 5000, // Poll every 5 seconds when active
+      staleTime: 4000,
+    },
+  });
+};
+
 export const useRevealedCells = (gameId: number | null) => {
   const { chainId } = useAccount();
   const [revealedCells, setRevealedCells] = useState<RevealedCellData[]>([]);
-  const [lastUpdate, setLastUpdate] = useState<number>(0);
+  const contractAddress = chainId
+    ? getTurnBasedContractAddress(chainId)
+    : undefined;
 
-  const contractAddress = chainId ? getTurnBasedContractAddress(chainId) : undefined;
-
-  // Get basic game data with dynamic polling
-  const { data: gameData } = useReadContract({
-    address: contractAddress as `0x${string}` | undefined,
+  const { data: gameData, refetch: refetchGameData } = useReadContract({
+    address: contractAddress,
     abi: TURN_BASED_SCRATCHER_ABI,
     functionName: 'getGame',
     args: gameId ? [BigInt(gameId)] : undefined,
     query: {
       enabled: !!contractAddress && !!gameId,
-      refetchInterval: Date.now() - lastUpdate < 60000 ? 3000 : 20000, // Poll every 3s for first minute, then every 20s
-      staleTime: 2000, // Cache for 2 seconds
+      refetchInterval: 5000,
+      staleTime: 4000,
     },
   });
 
-  // Get round 1 cell results - only poll when round 1+ is complete
-  const { data: round1Results } = useReadContract({
-    address: contractAddress as `0x${string}` | undefined,
-    abi: TURN_BASED_SCRATCHER_ABI,
-    functionName: 'getRoundCellResults',
-    args: gameId ? [BigInt(gameId), 1] : undefined,
-    query: {
-      enabled: !!contractAddress && !!gameId && !!gameData && (gameData as any)?.state >= 1,
-      refetchInterval: Date.now() - lastUpdate < 60000 ? 3000 : 30000, // Poll every 3s for first minute, then every 30s
-      staleTime: 2000, // Cache for 2 seconds
-    },
-  });
+  const gameState = (gameData as GameData | undefined)?.state;
 
-  // Get round 2 cell results - only poll when round 2+ is complete
-  const { data: round2Results } = useReadContract({
-    address: contractAddress as `0x${string}` | undefined,
-    abi: TURN_BASED_SCRATCHER_ABI,
-    functionName: 'getRoundCellResults',
-    args: gameId ? [BigInt(gameId), 2] : undefined,
-    query: {
-      enabled: !!contractAddress && !!gameId && !!gameData && (gameData as any)?.state >= 3,
-      refetchInterval: Date.now() - lastUpdate < 60000 ? 3000 : 30000, // Poll every 3s for first minute, then every 30s
-      staleTime: 2000, // Cache for 2 seconds
-    },
-  });
-
-  // Get round 3 cell results - only poll when round 3+ is complete
-  const { data: round3Results } = useReadContract({
-    address: contractAddress as `0x${string}` | undefined,
-    abi: TURN_BASED_SCRATCHER_ABI,
-    functionName: 'getRoundCellResults',
-    args: gameId ? [BigInt(gameId), 3] : undefined,
-    query: {
-      enabled: !!contractAddress && !!gameId && !!gameData && (gameData as any)?.state >= 5,
-      refetchInterval: Date.now() - lastUpdate < 60000 ? 3000 : 30000, // Poll every 3s for first minute, then every 30s
-      staleTime: 2000, // Cache for 2 seconds
-    },
-  });
+  const { data: round1Results, refetch: refetchRound1 } = useRoundResults(
+    gameId,
+    1,
+    !!gameState && gameState >= 1,
+  );
+  const { data: round2Results, refetch: refetchRound2 } = useRoundResults(
+    gameId,
+    2,
+    !!gameState && gameState >= 3,
+  );
+  const { data: round3Results, refetch: refetchRound3 } = useRoundResults(
+    gameId,
+    3,
+    !!gameState && gameState >= 5,
+  );
 
   useEffect(() => {
-    const allCells: RevealedCellData[] = [];
+    const processResults = (
+      results: readonly [bigint[], bigint[], bigint[]] | undefined,
+    ): RevealedCellData[] => {
+      if (!results || !Array.isArray(results) || results.length < 3) return [];
 
-    // Process round 1 results
-    if (round1Results && Array.isArray(round1Results) && round1Results.length >= 3) {
-      const [cellPayouts, cellRandomValues, cellIndexes] = round1Results;
-      for (let i = 0; i < 3; i++) {
-        if (Number(cellRandomValues[i]) > 0) { // Only add if actually revealed
-          allCells.push({
-            cellIndex: Number(cellIndexes[i]),
-            randomValue: Number(cellRandomValues[i]),
-            payout: Number(cellPayouts[i])
-          });
-        }
-      }
-    }
+      const [cellPayouts, cellRandomValues, cellIndexes] = results;
+      const cells: RevealedCellData[] = [];
 
-    // Process round 2 results
-    if (round2Results && Array.isArray(round2Results) && round2Results.length >= 3) {
-      const [cellPayouts, cellRandomValues, cellIndexes] = round2Results;
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < cellIndexes.length; i++) {
         if (Number(cellRandomValues[i]) > 0) {
-          allCells.push({
+          cells.push({
             cellIndex: Number(cellIndexes[i]),
             randomValue: Number(cellRandomValues[i]),
-            payout: Number(cellPayouts[i])
+            payout: Number(cellPayouts[i]),
           });
         }
       }
-    }
+      return cells;
+    };
 
-    // Process round 3 results
-    if (round3Results && Array.isArray(round3Results) && round3Results.length >= 3) {
-      const [cellPayouts, cellRandomValues, cellIndexes] = round3Results;
-      for (let i = 0; i < 3; i++) {
-        if (Number(cellRandomValues[i]) > 0) {
-          allCells.push({
-            cellIndex: Number(cellIndexes[i]),
-            randomValue: Number(cellRandomValues[i]),
-            payout: Number(cellPayouts[i])
-          });
-        }
-      }
-    }
+    const allCells = [
+      ...processResults(round1Results as any),
+      ...processResults(round2Results as any),
+      ...processResults(round3Results as any),
+    ];
 
-    if (allCells.length > 0) {
-      console.log('🎯 All revealed cells from getRoundCellResults:', allCells);
+    if (allCells.length > revealedCells.length) {
       setRevealedCells(allCells);
-      setLastUpdate(Date.now());
     }
-  }, [round1Results, round2Results, round3Results]);
+  }, [round1Results, round2Results, round3Results, revealedCells.length]);
+
+  const refetchCells = useCallback(() => {
+    refetchGameData();
+    refetchRound1();
+    refetchRound2();
+    refetchRound3();
+  }, [refetchGameData, refetchRound1, refetchRound2, refetchRound3]);
 
   return {
     revealedCells,
-    refetchCells: () => {}, // The individual hooks will handle refetching
+    refetchCells,
   };
 }; 
