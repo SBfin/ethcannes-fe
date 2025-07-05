@@ -4,9 +4,7 @@ import { createPortal } from 'react-dom';
 import styles from '../styles/TurnBasedScratcher.module.css';
 import { ErrorMessage } from './ErrorMessage';
 import { GameGrid } from './GameGrid';
-import { WinningMessage } from './WinningMessage';
-import { HoleFoundMessage } from './HoleFoundMessage';
-import { AcceptedOfferMessage } from './AcceptedOfferMessage';
+import { GameEndMessage } from './GameEndMessage';
 import { useRevealedCells } from '../hooks/turn-based-scratcher/useRevealedCells';
 import { useGameWatcher } from '../hooks/turn-based-scratcher/useGameWatcher';
 import { usePlayRound } from '../hooks/turn-based-scratcher/usePlayRound';
@@ -18,7 +16,16 @@ import { generateHouseOfferFromNumber } from '../utils/houseOfferGenerator';
 import { usePrevious } from '../hooks/usePrevious';
 import { useClaimPayout } from '../hooks/turn-based-scratcher/useClaimPayout';
 import { useAudio } from '../hooks/useAudio';
-import USDCLogo from './USDCLogo';
+
+const USDCLogo = ({ width = 16, height = 16 }) => (
+  <img 
+    src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHBhdGggZmlsbD0iIzI3NzVjYSIgZD0iTTUxMiAyNTZjMCAxNDEuMzg1LTExNC42MTUgMjU2LTI1NiAyNTZTMC তিনশত সাতানব্বইLjM4NSAwIDI1NiAxMTQuNjE1IDAgMjU2IDBzMjU2IDExNC42MTUgMjU2IDI1NnoiLz4KICA8cGF0aCBmaWxsPSIjZmZmIiBkPSJNMzkzLjQxNCAyNTYuMDAyYzAgNjAuMzYtNDAuOTAzIDExMC4xNDgtOTcuMTA4IDEyMy42Mzd2LTQwLjEyNWMzMS40MzItMTIuMjcgNTQuNTM2LTQyLjMwMiA1NC41MzYtNzYuODI4cy0yMy4xMDQtNjQuNTU4LTU0LjUzNi03Ni44MjdWMTMyLjM2YzU2LjIwNSAxMy40ODkgOTcuMTA4IDYzLjI3NyA5Ny4xMDggMTIzLjY0MnptLTIwMS4xMjcgODIuODgzdi00MC43NWMtMzEuNTItOS4xNy01My4xMTctMzguMzUtNTMuMTE3LTcyLjEzMyAwLTMzLjg3IDIxLjUwOC02My4wNSA1My4xMTctNzIuMTMzVjEzMi45OWMtNTYuMjA1IDEzLjQ5LTk3LjEwOCA2My4yNzctOTcuMTA4IDEyMy42NDMgMCA2MC4zNjQgNDAuOTAyIDExMC4xNSA5Ny4xMDggMTIzLjYzN3YtNDAuMTIyYy0uMDAxLS4wMDEgMCAwIDAgMHptNDMuMzctMTI0LjcxYy0xNC41MSAwLTI2LjI3MyAxMS43NjMtMjYuMjczIDI2LjI3NHMxMS43NjMgMjYuMjc0IDI2LjI3MyAyNi4yNzQgMjYuMjczLTExLjc2NCAyNi4yNzMtMjYuMjc0cy0xMS43NjMtMjYuMjc0LTI2LjI3My0yNi4yNzR6Ii8+Cjwvc3ZnPg==" 
+    width={width} 
+    height={height} 
+    alt="USDC" 
+    style={{ verticalAlign: 'middle', display: 'inline-block' }} 
+  />
+);
 
 interface RevealedCell {
   symbolId: number;
@@ -449,7 +456,8 @@ const TurnBasedScratcher = forwardRef<TurnBasedScratcherRef, TurnBasedScratcherP
       <>
         {/* Show winning message overlay when claim is successful */}
         {claimSuccessInfo && (
-          <WinningMessage
+          <GameEndMessage
+            state="win"
             amount={claimSuccessInfo.amount}
             gameId={claimSuccessInfo.gameId}
             onPlayAgain={handlePlayAgain}
@@ -458,7 +466,9 @@ const TurnBasedScratcher = forwardRef<TurnBasedScratcherRef, TurnBasedScratcherP
         
         {/* Show hole found message overlay when hole is found */}
         {showHoleMessage && gameId && (
-          <HoleFoundMessage
+          <GameEndMessage
+            state="hole"
+            amount={BigInt(0)} // Amount doesn't matter for hole
             gameId={gameId}
             onPlayAgain={handlePlayAgain}
           />
@@ -466,7 +476,8 @@ const TurnBasedScratcher = forwardRef<TurnBasedScratcherRef, TurnBasedScratcherP
         
         {/* Show accepted offer message overlay when offer is accepted */}
         {acceptedOfferInfo && (
-          <AcceptedOfferMessage
+          <GameEndMessage
+            state="offer"
             amount={BigInt(Math.floor(acceptedOfferInfo.amount * 1_000_000))}
             gameId={acceptedOfferInfo.gameId}
             onPlayAgain={handlePlayAgain}
